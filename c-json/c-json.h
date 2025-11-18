@@ -4,7 +4,14 @@
 
 #include <stdio.h>
 #include <stdbool.h>
+#include <string.h>
+#include <stdlib.h>
 #include <assert.h>
+
+#define _CJ_DEFAULT_OBJ_CAP_VALUE_  1
+#define _CJ_DEFAULT_ARR_CAP_VALUE_  2
+
+#define _CJ_CAP_FACTOR_             2
 
 #ifdef __cpluplus
 extern "C" {
