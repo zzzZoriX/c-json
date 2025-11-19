@@ -2,8 +2,7 @@
 #include "c-json.h"
 
 CJsonError cjo_realloc(CJsonObject* cjo){
-    if(cjo->size == cjo->capacity)
-        cjo->capacity *= _CJ_CAP_FACTOR_;
+    cjo->capacity *= _CJ_CAP_FACTOR_;
 
     cjo->pairs = (CJsonPair*)realloc(cjo->pairs, sizeof(CJsonPair) * cjo->size);
     if(!cjo->pairs)
@@ -61,8 +60,7 @@ CJsonError cja_create(CJsonArray* cja){
 }
 
 CJsonError cja_realloc(CJsonArray* cja){
-    if(cja->size == cja->capacity)
-        cja->capacity *= _CJ_CAP_FACTOR_;
+    cja->capacity *= _CJ_CAP_FACTOR_;
 
     cja->data = (CJsonValue*)realloc(cja->data, sizeof(CJsonValue) * cja->capacity);
     if(!cja->data)
