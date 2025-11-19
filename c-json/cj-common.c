@@ -70,3 +70,44 @@ CJsonError cja_realloc(CJsonArray* cja){
 
     return CJE_OK;
 }
+
+CJsonType cj_def_jsonv_type(const string s){
+    if(s[0] == '"')     return CJ_STRING;
+    if(isdigit(s[0]))   return CJ_NUMBER;
+    if(!strcmp(s, "true") || !strcmp(s, "false"))   return CJ_BOOL;
+    if(s[0] == '{')     return CJ_OBJECT;
+    if(s[0] == '[')     return CJ_ARRAY;
+
+    return CJ_NULL;
+}
+
+bool cj_is_valid_strv(const string s, CJsonError* e){
+    return s[0] == '"' && s[strlen(s) - 1] == '"';
+}
+
+bool cj_is_valid_numv(const string s, CJsonError* e){
+    if((s[0] != '-' && !isdigit(s[0])) && s[0] == '.')
+        return false;
+
+    bool has_dot = false;
+    
+    for(int i = 1; i < strlen(s); ++i){
+        if((s[i] == '.' && has_dot) || !isdigit(s[i])){
+            *e = CJE_ERR_NUMBER_FORMAT;
+            return false;
+        }
+        else if(s[i] == '.')
+            has_dot = true;
+    }
+
+    return true;
+}
+
+bool cj_is_valid_boolv(const string s, CJsonError* e){
+    if(strcmp(s, "true") != 0 && strcmp(s, "false") != 0){
+        *e = CJE_ERR_UNEXPECTED_TOKEN;
+        return false;
+    }
+
+    return true;
+}
