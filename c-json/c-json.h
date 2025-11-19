@@ -6,6 +6,7 @@
 #include <stdbool.h>
 #include <string.h>
 #include <stdlib.h>
+#include <ctype.h>
 #include <assert.h>
 
 #define _CJ_DEFAULT_OBJ_CAP_VALUE_  1
