@@ -155,3 +155,33 @@ CJsonValue* cjson_parse(
 
     return cjson_main_obj;
 }
+
+CJsonValue* cjson_get(CJsonValue* cjv, key_t key){
+    if(!key || cjv->value_type != CJ_OBJECT)
+        return cjv;
+
+    CJsonValue* ret = NULL;
+
+    for(size_t i = 0; i < cjv->cj_object_value->size; ++i){
+        if(cjv->cj_object_value->pairs[i].value->value_type == CJ_OBJECT){
+            ret = cjson_get(cjv->cj_object_value->pairs[i].value, key);
+
+            if(ret != NULL)
+                break;
+
+            continue;
+        }
+        if(cjv->cj_object_value->pairs[i].value->value_type == CJ_ARRAY){
+            CJsonArray* cjac = cjv->cj_object_value->pairs[i].value->cj_array_value;
+
+            for(size_t i = 0; i < cjac->size; ++i)
+                if(cjac->data[i].value_type == CJ_OBJECT)
+                    ret = cjson_get(&cjac->data[i], key);
+        }
+
+        if(!strcmp(key, cjv->cj_object_value->pairs[i].key))
+            ret = cjv->cj_object_value->pairs[i].value;
+    }
+
+    return ret;
+}
