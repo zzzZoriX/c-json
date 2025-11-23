@@ -223,7 +223,7 @@ CJsonValue* cjson_get_string(CJsonValue* cjv, key_t key){
 }
 
 CJsonValue* cjson_get_number(CJsonValue* cjv, key_t key){
-    if(!key || (cjv->value_type != CJ_OBJECT && cjv->value_type != CJ_STRING))
+    if(!key || (cjv->value_type != CJ_OBJECT && cjv->value_type != CJ_BOOL))
         return NULL;
 
     if(cjv->value_type == CJ_NUMBER)
@@ -245,12 +245,48 @@ CJsonValue* cjson_get_number(CJsonValue* cjv, key_t key){
 
             for(size_t i = 0; i < cjac->size; ++i)
                 if(cjac->data[i].value_type == CJ_OBJECT)
-                    ret = cjson_get_string(&cjac->data[i], key);
+                    ret = cjson_get_number(&cjac->data[i], key);
         }
 
         if(
             !strcmp(key, cjv->cj_object_value->pairs[i].key) && 
             cjv->cj_object_value->pairs[i].value->value_type == CJ_NUMBER
+        )
+            ret = cjv->cj_object_value->pairs[i].value;
+    }
+
+    return ret;
+}
+
+CJsonValue* cjson_get_bool(CJsonValue* cjv, key_t key){
+    if(!key || (cjv->value_type != CJ_OBJECT && cjv->value_type != CJ_BOOL))
+        return NULL;
+
+    if(cjv->value_type == CJ_BOOL)
+        return cjv;
+
+    CJsonValue* ret = NULL;
+
+    for(size_t i = 0; i < cjv->cj_object_value->size; ++i){
+        if(cjv->cj_object_value->pairs[i].value->value_type == CJ_OBJECT){
+            ret = cjson_get_bool(cjv->cj_object_value->pairs[i].value, key);
+
+            if(ret != NULL)
+                break;
+
+            continue;
+        }
+        if(cjv->cj_object_value->pairs[i].value->value_type == CJ_ARRAY){
+            CJsonArray* cjac = cjv->cj_object_value->pairs[i].value->cj_array_value;
+
+            for(size_t i = 0; i < cjac->size; ++i)
+                if(cjac->data[i].value_type == CJ_OBJECT)
+                    ret = cjson_get_bool(&cjac->data[i], key);
+        }
+
+        if(
+            !strcmp(key, cjv->cj_object_value->pairs[i].key) && 
+            cjv->cj_object_value->pairs[i].value->value_type == CJ_BOOL
         )
             ret = cjv->cj_object_value->pairs[i].value;
     }
