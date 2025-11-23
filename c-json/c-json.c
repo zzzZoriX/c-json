@@ -186,18 +186,18 @@ CJsonValue* cjson_get(CJsonValue* cjv, key_t key){
     return ret;
 }
 
-string cjson_get_string(CJsonValue* cjv, key_t key, CJsonError* err){
+CJsonValue* cjson_get_string(CJsonValue* cjv, key_t key){
     if(!key || (cjv->value_type != CJ_OBJECT && cjv->value_type != CJ_STRING))
         return NULL;
 
     if(cjv->value_type == CJ_STRING)
-        return cjv->cj_string_value;
+        return cjv;
 
-    string ret = NULL;
+    CJsonValue* ret = NULL;
 
     for(size_t i = 0; i < cjv->cj_object_value->size; ++i){
         if(cjv->cj_object_value->pairs[i].value->value_type == CJ_OBJECT){
-            ret = cjson_get_string(cjv->cj_object_value->pairs[i].value, key, err);
+            ret = cjson_get_string(cjv->cj_object_value->pairs[i].value, key);
 
             if(ret != NULL)
                 break;
@@ -209,21 +209,50 @@ string cjson_get_string(CJsonValue* cjv, key_t key, CJsonError* err){
 
             for(size_t i = 0; i < cjac->size; ++i)
                 if(cjac->data[i].value_type == CJ_OBJECT)
-                    ret = cjson_get_string(&cjac->data[i], key, err);
+                    ret = cjson_get_string(&cjac->data[i], key);
         }
 
         if(
             !strcmp(key, cjv->cj_object_value->pairs[i].key) && 
             cjv->cj_object_value->pairs[i].value->value_type == CJ_STRING
-        ){
-            ret = _strdup(cjv->cj_object_value->pairs[i].value->cj_string_value);
+        )
+            ret = cjv->cj_object_value->pairs[i].value;
+    }
 
-            if(!ret){
-                *err = CJE_ERR_OOM;
+    return ret;
+}
 
-                return NULL;
-            }
+CJsonValue* cjson_get_number(CJsonValue* cjv, key_t key){
+    if(!key || (cjv->value_type != CJ_OBJECT && cjv->value_type != CJ_STRING))
+        return NULL;
+
+    if(cjv->value_type == CJ_NUMBER)
+        return cjv;
+
+    CJsonValue* ret = NULL;
+
+    for(size_t i = 0; i < cjv->cj_object_value->size; ++i){
+        if(cjv->cj_object_value->pairs[i].value->value_type == CJ_OBJECT){
+            ret = cjson_get_number(cjv->cj_object_value->pairs[i].value, key);
+
+            if(ret != NULL)
+                break;
+
+            continue;
         }
+        if(cjv->cj_object_value->pairs[i].value->value_type == CJ_ARRAY){
+            CJsonArray* cjac = cjv->cj_object_value->pairs[i].value->cj_array_value;
+
+            for(size_t i = 0; i < cjac->size; ++i)
+                if(cjac->data[i].value_type == CJ_OBJECT)
+                    ret = cjson_get_string(&cjac->data[i], key);
+        }
+
+        if(
+            !strcmp(key, cjv->cj_object_value->pairs[i].key) && 
+            cjv->cj_object_value->pairs[i].value->value_type == CJ_NUMBER
+        )
+            ret = cjv->cj_object_value->pairs[i].value;
     }
 
     return ret;
