@@ -295,14 +295,60 @@ CJsonValue* cjson_get_bool(CJsonValue* cjv, key_t key){
     return ret;
 }
 
-
 size_t cjson_array_get_size(CJsonValue* array){
+    if(!array)
+        return 0;
+
     return array->cj_array_value->size;
 }
 
 CJsonValue* cjson_array_get(CJsonValue* array, size_t index){
+    if(!array)
+        return NULL;
+
     if(index > array->cj_array_value->size)
         return NULL;
     
     return &array->cj_array_value->data[index];
+}
+
+
+void cjson_free(CJsonValue* cjv){
+    if(!cjv) 
+        return;
+
+    switch(cjv->value_type){
+        case CJ_STRING:
+            free(cjv->cj_string_value);
+            break;
+
+        case CJ_OBJECT:
+            for(size_t i = 0; i < cjv->cj_object_value->size; ++i){
+                cjson_free(cjv->cj_object_value->pairs[i].value);
+                
+                free(cjv->cj_object_value->pairs[i].key);
+            }
+
+            free(cjv->cj_object_value->pairs);
+            cjv->cj_object_value->capacity = 0;
+            cjv->cj_object_value->size = 0;
+
+            break;
+
+        case CJ_ARRAY:
+            for(size_t i = 0; i < cjv->cj_array_value->size; ++i)
+                cjson_free(&cjv->cj_array_value->data[i]);
+
+            free(cjv->cj_array_value->data);
+            cjv->cj_array_value->capacity = 0;
+            cjv->cj_array_value->size = 0;
+
+            break;
+
+        default:
+            break;
+    }
+
+    cjv->value_type = CJ_NULL;
+    free(cjv);
 }
