@@ -156,6 +156,7 @@ CJsonValue* cjson_parse(
     return cjson_main_obj;
 }
 
+
 CJsonValue* cjson_get(CJsonValue* cjv, key_t key){
     if(!key || cjv->value_type != CJ_OBJECT)
         return NULL;
@@ -292,4 +293,16 @@ CJsonValue* cjson_get_bool(CJsonValue* cjv, key_t key){
     }
 
     return ret;
+}
+
+
+size_t cjson_array_get_size(CJsonValue* array){
+    return array->cj_array_value->size;
+}
+
+CJsonValue* cjson_array_get(CJsonValue* array, size_t index){
+    if(index > array->cj_array_value->size)
+        return NULL;
+    
+    return &array->cj_array_value->data[index];
 }
