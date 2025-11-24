@@ -115,6 +115,12 @@ CJsonValue* cjson_array_get(
         size_t          // index of taken object
     );
 
+// convert CJsonValue* object to string
+string cjson_serialize(
+        const CJsonValue*, // object to serialize
+        CJsonError*        // a pointer to error object
+    );
+
 
 #ifdef __cpluplus
 }
