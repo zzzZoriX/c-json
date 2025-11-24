@@ -23,6 +23,7 @@ typedef double  number;
 typedef char*   key_t;
 typedef size_t  pos;
 
+
 typedef enum {
     CJ_NULL,
     CJ_STRING,
@@ -78,26 +79,30 @@ typedef struct CJsonObject {
     CJsonPair* pairs;
 } CJsonObject;
 
+
 CJsonValue* cjson_parse(
         const string,   // json data
         const size_t,   // length of json data string
         CJsonError*,    // error code ref
         pos*            // error position
     );
+void cjson_free(
+        CJsonValue*     // object to free
+    );
 
 CJsonValue* cjson_get(
         CJsonValue*,    // parsed json data
-        key_t           // by that key the function will search an object  
+        key_t           // by that key the function will search an object 
     );
-string cjson_get_string(
+CJsonValue* cjson_get_string(
         CJsonValue*,    // parsed json data
         key_t           // by that key the function will search an object  
     );
-number cjson_get_number(
+CJsonValue* cjson_get_number(
         CJsonValue*,    // parsed json data
         key_t           // by that key the function will search an object  
     );
-bool cjson_get_bool(
+CJsonValue* cjson_get_bool(
         CJsonValue*,    // parsed json data
         key_t           // by that key the function will search an object  
     );
