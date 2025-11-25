@@ -9,6 +9,9 @@ extern CJsonError cja_realloc(CJsonArray* cja);
 
 extern CJsonValue* cj_parse_value(const string* tokens, size_t tc, size_t* cti, CJsonError* cje);
 
+extern string concat(const string s1, const string s2);
+string concat_c(const string s, const char c);
+
 static CJsonError cjson_tokenize(pos* pep, string data, size_t lod, string* tokens, size_t* tc){
     for(size_t i = 0; i < lod; ++i){
         ++*pep;
@@ -351,4 +354,63 @@ void cjson_free(CJsonValue* cjv){
 
     cjv->value_type = CJ_NULL;
     free(cjv);
+}
+
+
+string cjson_serialize(const CJsonValue* cjv, CJsonError* err){
+    if(!cjv) 
+        return "";
+
+    string ret = "";
+
+    switch(cjv->value_type){
+        case CJ_NUMBER:
+            char spd[50];
+            
+            sprintf(spd, "%f", cjv->cj_number_value);
+
+            ret = concat(ret, spd);
+
+            break;
+
+        case CJ_BOOL:
+            ret = concat(
+                ret,
+                cjv->cj_bool_value ? "true" : "false"
+            );
+
+            break;
+
+        case CJ_STRING:
+            ret = concat_c(ret, '\\');
+            
+            for(size_t i = 0; i < sizeof(cjv->cj_string_value) - 1; ++i){
+                ret = concat_c(ret, cjv->cj_string_value[i]);
+            }
+
+            ret = concat_c(ret, '\"');
+
+            break;
+
+        case CJ_OBJECT:
+            for(size_t i = 0; i < cjv->cj_object_value->size; ++i){
+                ret = concat(ret, cjv->cj_object_value->pairs[i].key);
+                ret = concat(ret, ": ");
+
+                ret = concat(ret, cjson_serialize(cjv->cj_object_value->pairs[i].value, err));
+            }
+
+            break;
+
+        case CJ_ARRAY:
+            for(size_t i = 0; i < cjv->cj_array_value->size; ++i)
+                ret = concat(ret, cjson_serialize(&cjv->cj_array_value->data[i], err));
+
+            break;
+
+        default:
+            break;
+    }
+
+    return ret;
 }
