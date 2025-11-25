@@ -109,3 +109,23 @@ bool cj_is_valid_boolv(const string s, CJsonError* e){
 
     return true;
 }
+
+string concat(const string s1, const string s2){
+    string res = (string)malloc(sizeof(s1) + sizeof(s2) + 1);
+
+    strcpy(res, s1);
+    strcat(res, s2);
+
+    return res;
+}
+
+string concat_c(const string s, const char c){
+    string res = (string)malloc(sizeof(s) + 2);
+
+    strcpy(res, s);
+
+    res[sizeof(res) - 2] = c;
+    res[sizeof(res) - 1] = '\0';
+
+    return res;
+}
