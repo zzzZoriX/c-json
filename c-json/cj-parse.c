@@ -1,9 +1,9 @@
 #include "c-json.h"
 
-extern CJsonError cjo_create(CJsonObject* cjo);
+extern CJsonError cjo_create(CJsonObject** cjo);
 extern CJsonError cjo_realloc(CJsonObject* cjo);
-extern CJsonError cjv_create(CJsonValue* cjv);
-extern CJsonError cja_create(CJsonArray* cja);
+extern CJsonError cjv_create(CJsonValue** cjv);
+extern CJsonError cja_create(CJsonArray** cja);
 extern CJsonError cja_realloc(CJsonArray* cja);
 
 bool cj_is_valid_boolv(const string s, CJsonError* e);
@@ -22,10 +22,10 @@ CJsonObject* cj_parse_object(const string* tokens, size_t tc, size_t* cti, CJson
     ++*cti; // skip {
 
     CJsonObject* cjo;
-    if((*cje = cjo_create(cjo)) != CJE_OK)
+    if((*cje = cjo_create(&cjo)) != CJE_OK)
         return NULL;
 
-    while(tokens[*cti][0] != '}' && *cti <= tc){
+    while(*cti <= tc && tokens[*cti][0] != '}'){
         if(cj_def_jsonv_type(tokens[*cti]) != CJ_STRING){
             *cje = CJE_ERR_UNEXPECTED_TOKEN;
 
@@ -45,8 +45,10 @@ CJsonObject* cj_parse_object(const string* tokens, size_t tc, size_t* cti, CJson
 
             return NULL;
         }
+
+        (*cti)++;
         
-        if(tokens[*cti + 1][0] != ':'){
+        if(*cti >= tc || tokens[*cti + 1][0] != ':'){
             *cje = CJE_ERR_UNEXPECTED_TOKEN;
 
             free(cjo->pairs);
@@ -55,8 +57,9 @@ CJsonObject* cj_parse_object(const string* tokens, size_t tc, size_t* cti, CJson
             return NULL;
         }
 
-        *cti += 2; // jump over :
-        if(*cti == tc){
+        (*cti)++;
+
+        if(*cti >= tc){
             *cje = CJE_ERR_EOF;
         
             free(cjo->pairs);
@@ -75,9 +78,11 @@ CJsonObject* cj_parse_object(const string* tokens, size_t tc, size_t* cti, CJson
         }
 
         // make the pair
-        if(cjo->size == cjo->capacity)
-            if((*cje = cjo_realloc(cjo)) != CJE_OK)
-                return NULL;
+        if(cjo->size == cjo->capacity && (*cje = cjo_realloc(cjo)) != CJE_OK){
+            free(key);
+            
+            return NULL;
+        }
 
         cjo->pairs[cjo->size].key = _strdup(key);
         
@@ -91,8 +96,11 @@ CJsonObject* cj_parse_object(const string* tokens, size_t tc, size_t* cti, CJson
         }
 
         cjo->pairs[cjo->size].value = cjov;
+        cjo->size++;
 
-        if(tokens[*cti][0] != ',' && tokens[*cti][0] != '}'){
+        ++*cti;
+
+        if(*cti >= tc || (tokens[*cti][0] != ',' && tokens[*cti][0] != '}')){
             *cje = CJE_ERR_UNEXPECTED_TOKEN;
 
             free(cjo->pairs);
@@ -123,7 +131,7 @@ CJsonArray* cj_parse_array(const string* tokens, size_t tc, size_t* cti, CJsonEr
     ++*cti; // skip [
 
     CJsonArray* cja;
-    if((*cje = cja_create(cja)) != CJE_OK)
+    if((*cje = cja_create(&cja)) != CJE_OK)
         return NULL;
 
     while(tokens[*cti][0] != ']' && *cti <= tc){
@@ -140,7 +148,11 @@ CJsonArray* cj_parse_array(const string* tokens, size_t tc, size_t* cti, CJsonEr
             if((*cje = cja_realloc(cja)) != CJE_OK)
                 return NULL;
 
-        cja->data[cja->size++] = *cj_parse_value(tokens, tc, cti, cje);
+        CJsonValue* cjv = cj_parse_value(tokens, tc, cti, cje);
+        if(*cje != CJE_OK)
+            return NULL;
+
+        cja->data[cja->size++] = *cjv;
 
         if(tokens[*cti + 1][0] != ',' && tokens[*cti + 1][0] != ']'){
             *cje = CJE_ERR_UNEXPECTED_TOKEN;
@@ -177,7 +189,7 @@ CJsonArray* cj_parse_array(const string* tokens, size_t tc, size_t* cti, CJsonEr
  */
 CJsonValue* cj_parse_value(const string* tokens, size_t tc, size_t* cti, CJsonError* cje){
     CJsonValue* cjv;
-    if((*cje = cjv_create(cjv)) != CJE_OK)
+    if((*cje = cjv_create(&cjv)) != CJE_OK)
         return NULL;
 
     cjv->value_type = cj_def_jsonv_type(tokens[*cti]);
@@ -240,9 +252,6 @@ CJsonValue* cj_parse_value(const string* tokens, size_t tc, size_t* cti, CJsonEr
 
     else if(cjv->value_type == CJ_OBJECT)
         cjv->cj_object_value = cj_parse_object(tokens, tc, cti, cje);
-
-
-    ++*cti;
 
     if(*cti == tc){
         *cje = CJE_ERR_EOF;
