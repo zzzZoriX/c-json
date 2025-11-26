@@ -4,7 +4,7 @@
 CJsonError cjo_realloc(CJsonObject* cjo){
     cjo->capacity *= _CJ_CAP_FACTOR_;
 
-    cjo->pairs = (CJsonPair*)realloc(cjo->pairs, sizeof(CJsonPair) * cjo->size);
+    cjo->pairs = (CJsonPair*)realloc(cjo->pairs, sizeof(CJsonPair) * cjo->capacity);
     if(!cjo->pairs)
         return CJE_ERR_OOM;
 
